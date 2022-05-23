@@ -1,4 +1,3 @@
-
 echo "Insert \e[31mtarget's\e[0m address"
 read target_ip
 echo "Specify \e[31mtarget's\e[0m ports \e[1;34m[def=all; 21,80,443...]\e[0m"
