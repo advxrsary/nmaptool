@@ -1,0 +1,53 @@
+#!/bin/zsh
+# Assigning IP of the victim
+echo "Enter \e[31mtarget's\e[0m address \e[1;34m[0.0.0.0]\e[0m"
+read -r target_ip
+# Default value
+if [ -z "$target_ip" ]; then
+        target_ip="0.0.0.0"
+fi
+
+echo "Specify \e[31mtarget's\e[0m ports \e[1;34m[def=all; 21,80,443...]\e[0m"
+
+# Ports assignment
+read -r specified_ports
+# Default value
+if [ -z "$specified_ports" ]; then
+        echo "scanning on \e[32mALL\e[0m ports"
+        specified_ports="0-65535"
+else
+        echo "scanning on \e[32m$specified_ports\e[0m ports"
+fi
+
+# Making a directory for scanning results
+if [ ! -d Results ]; then
+        mkdir Results
+fi
+if [ ! -d Results/$target_ip ]; then
+        mkdir Results/$target_ip
+fi
+
+# Scanning for open ports
+ports=$(nmap -p$specified_ports --min-rate=1000 $target_ip -T4  | grep "^[0-9]" | cut -d '/' -f 1 | tr '\n'  ',' | sed s/,$//)
+portsIN=($(echo $ports | tr ',' "\n"))
+counter=${#portsIN[@]}
+counter=($counter)
+echo "Found $counter open ports: \e[32m$ports\e[0m"
+
+# Export ports to TXT
+touch Results/ports.txt | echo "$ports" >  Results/$target_ip/ports.txt
+
+printf "\nSpecify arguments for nmap scanning \e[1;34m[-Pn, -A, -sC, -sV...]\e[0m\n"
+read -r args
+echo "\e[1;33mPerforming scanning on these ports with arguments $args :\e[0m "
+nmap -p"$specified_ports" "$args" "$target_ip" -oX  Results/"$target_ip"/scan.xml -o Results/"$target_ip"/scan.txt
+
+printf "\n\e[1;33mConverting to .csv...\e[0m\n"
+python3 nmap_xml_parser.py -f Results/$target_ip/scan.xml -csv Results/$target_ip/scan.csv | grep '^\['
+
+printf "\e[32m\nDone! Check Results folder\e[0m\n"
+printf "Ports are availiable at:\e[1;34m\nTXT:\e[0m\e[34m\tResults/%s/ports.txt\e[0m\n" "$target_ip"
+printf "Scan results are availiable at:\n"
+printf "\e[1;34mXML:\e[0m\e[34m\tResults/%s/scan.xmll\e[0m\n" "$target_ip"
+printf "\e[1;34mCSV:\e[0m\e[34m\tResults/%s/scan.csv\e[0m\n" "$target_ip"
+printf "\e[1;34mTXT:\e[0m\e[34m\tResults/%s/scan.txt\e[0m\n" "$target_ip"
