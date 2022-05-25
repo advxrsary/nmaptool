@@ -2,7 +2,7 @@
 
 nmaptool is a script written for shell, to simplify the process of repeated scanning.
 
-## Guide
+## Setup
 ```bash
 git clone https://github.com/advxrsary/nmaptool.git
 cd nmaptool
