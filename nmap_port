@@ -47,7 +47,7 @@ nmap -p"$specified_ports" "$args" "$target_ip" -oX  Results/"$target_ip"/scan.xm
 
 # Convert xml scan results to csv
 printf "\n\e[1;33mConverting to .csv...\e[0m\n"
-python3 nmap_xml_parser.py -f Results/$target_ip/scan.xml -csv Results/$target_ip/scan.csv | grep '^\['
+nmap_xml_parser.py -f Results/$target_ip/scan.xml -csv Results/$target_ip/scan.csv | grep '^\['
 
 # Output
 printf "\e[32m\nDone! Check Results folder\e[0m\n"
