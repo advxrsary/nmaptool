@@ -1,5 +1,12 @@
 #!/bin/zsh
-# Assigning IP of the victim
+
+# Results directory
+resdir="scan-results"
+# Warning
+echo "\t\t\n[\e[4;31mWARNING\e[0m]"
+echo "\e[1;31mDirectory named $resdir will be generated\e[0m\n\n"
+
+# Assigning victim's host address
 echo "Enter \e[31mtarget's\e[0m address \e[1;34m[0.0.0.0]\e[0m"
 read -r target_ip
 # Default value
@@ -20,11 +27,11 @@ else
 fi
 
 # Making a directory for scanning results
-if [ ! -d Results ]; then
-        mkdir Results
+if [ ! -d $resdir ]; then
+        mkdir $resdir
 fi
-if [ ! -d Results/$target_ip ]; then
-        mkdir Results/$target_ip
+if [ ! -d $resdir/$target_ip ]; then
+        mkdir $resdir/$target_ip
 fi
 
 # Scanning for open ports
@@ -36,23 +43,23 @@ counter=($counter)
 echo "Found $counter open ports: \e[32m$ports\e[0m"
 
 # Export ports to TXT
-touch Results/ports.txt | echo "$ports" >  Results/$target_ip/ports.txt
+touch $resdir/ports.txt | echo "$ports" >  $resdir/$target_ip/ports.txt
 
 # Arguments for nmap
 printf "\nSpecify arguments for nmap scanning \e[1;34m[-Pn, -A, -sC, -sV...]\e[0m\n"
 read -r args
 # Nmap scanning
 echo "\e[1;33mPerforming scanning on these ports with arguments $args :\e[0m "
-nmap -p"$specified_ports" "$args" "$target_ip" -oX  Results/"$target_ip"/scan.xml -o Results/"$target_ip"/scan.txt
+nmap -p"$specified_ports" "$args" "$target_ip" -oX  $resdir/"$target_ip"/scan.xml -o $resdir/"$target_ip"/scan.txt
 
 # Convert xml scan results to csv
 printf "\n\e[1;33mConverting to .csv...\e[0m\n"
-nmap_xml_parser.py -f Results/$target_ip/scan.xml -csv Results/$target_ip/scan.csv | grep '^\['
+nmap_xml_parser.py -f $resdir/$target_ip/scan.xml -csv $resdir/$target_ip/scan.csv | grep '^\['
 
 # Output
-printf "\e[32m\nDone! Check Results folder\e[0m\n"
-printf "Ports are availiable at:\e[1;34m\nTXT:\e[0m\e[34m\tResults/%s/ports.txt\e[0m\n" "$target_ip"
+printf "\e[32m\nDone! Check $resdir folder\e[0m\n"
+printf "Ports are availiable at:\e[1;34m\nTXT:\e[0m\e[34m\t%s/ports.txt\e[0m\n" "$resdir/$target_ip"
 printf "Scan results are availiable at:\n"
-printf "\e[1;34mXML:\e[0m\e[34m\tResults/%s/scan.xmll\e[0m\n" "$target_ip"
-printf "\e[1;34mCSV:\e[0m\e[34m\tResults/%s/scan.csv\e[0m\n" "$target_ip"
-printf "\e[1;34mTXT:\e[0m\e[34m\tResults/%s/scan.txt\e[0m\n" "$target_ip"
+printf "\e[1;34mXML:\e[0m\e[34m\t%s/scan.xmll\e[0m\n" "$resdir/$target_ip"
+printf "\e[1;34mCSV:\e[0m\e[34m\t%s/scan.csv\e[0m\n" "$resdir/$target_ip"
+printf "\e[1;34mTXT:\e[0m\e[34m\t%s/scan.txt\e[0m\n" "$resdir/$target_ip"
