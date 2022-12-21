@@ -45,12 +45,11 @@ echo "$open_ports" > "$resdir/$target_ip/ports.txt"
 
 # Prompt user for arguments for nmap scan
 echo "Specify arguments for nmap scanning [-Pn, -A, -sC, -sV...]:"
-read -r args
+read -ra args
 
 # Scan ports using nmap
-echo "Performing scanning on these ports with arguments $args:"
-nmap -p"$specified_ports" "$args" "$target_ip" -oX "$resdir/$target_ip/scan.xml" -o "$resdir/$target_ip/scan.txt"
-
+echo "Performing scanning on these ports with arguments ${args[*]}:"
+nmap -p"$specified_ports" "${args[@]}" "$target_ip" -oX "$resdir/$target_ip/scan.xml" -o "$resdir/$target_ip/scan.txt"
 # Convert xml scan results to csv
 echo "Converting to .csv..."
 nmap_xml_parser.py -f "$resdir/$target_ip/scan.xml" -csv "$resdir/$target_ip/scan.csv" | grep '^\['
