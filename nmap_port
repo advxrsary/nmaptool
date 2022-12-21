@@ -1,64 +1,60 @@
-#!/bin/zsh
+#!/bin/bash
 
 # Results directory
 resdir="scan-results"
-# Warning
-echo "[\e[4;31mDirectory named $resdir will be generated\e[0m]\n"
 
-# Assigning victim's host address
-echo "Enter \e[31mtarget's\e[0m address \e[1;34m[0.0.0.0]\e[0m"
+# Prompt user for target IP address and ports
+echo "Enter target's address [0.0.0.0]:"
 read -r target_ip
-# Default value
+
+# Set default value for target IP if not provided
 if [ -z "$target_ip" ]; then
-        target_ip="0.0.0.0"
+  target_ip="0.0.0.0"
 fi
 
-echo "Specify \e[31mtarget's\e[0m ports \e[1;34m[def=all; 21,80,443...]\e[0m"
-
-# Ports assignment
+echo "Specify target's ports [def=all; 21,80,443...]:"
 read -r specified_ports
-# Default value
+
+# Set default value for ports if not provided
 if [ -z "$specified_ports" ]; then
-        echo "scanning on \e[32mALL\e[0m ports"
-        specified_ports="0-65535"
+  echo "Scanning on ALL ports"
+  specified_ports="0-65535"
 else
-        echo "scanning on \e[32m$specified_ports\e[0m ports"
+  echo "Scanning on $specified_ports ports"
 fi
 
-# Making a directory for scanning results
-if [ ! -d $resdir ]; then
-        mkdir $resdir
-fi
-if [ ! -d $resdir/$target_ip ]; then
-        mkdir $resdir/$target_ip
+# Make directory for scanning results if it doesn't already exist
+if [ ! -d "$resdir" ]; then
+  mkdir "$resdir"
 fi
 
-# Scanning for open ports
-ports=$(nmap -p$specified_ports --min-rate=1000 $target_ip -T4  | grep "^[0-9]" | cut -d '/' -f 1 | tr '\n'  ',' | sed s/,$//)
+if [ ! -d "$resdir/$target_ip" ]; then
+  mkdir "$resdir/$target_ip"
+fi
+
+# Scan for open ports
+open_ports=$(nmap -p"$specified_ports" --min-rate=1000 "$target_ip" -T4 | grep "^[0-9]" | cut -d '/' -f 1 | tr '\n' ',' | sed s/,$//)
+
 # Count open ports
-portsIN=($(echo $ports | tr ',' "\n"))
-counter=${#portsIN[@]}
-counter=($counter)
-echo "Found $counter open ports: \e[32m$ports\e[0m"
+open_ports_array=($(echo "$open_ports" | tr ',' '\n'))
+counter=${#open_ports_array[@]}
+echo "Found $counter open ports: $open_ports"
 
 # Export ports to TXT
-touch $resdir/ports.txt | echo "$ports" >  $resdir/$target_ip/ports.txt
+echo "$open_ports" > "$resdir/$target_ip/ports.txt"
 
-# Arguments for nmap
-printf "\nSpecify arguments for nmap scanning \e[1;34m[-Pn, -A, -sC, -sV...]\e[0m\n"
+# Prompt user for arguments for nmap scan
+echo "Specify arguments for nmap scanning [-Pn, -A, -sC, -sV...]:"
 read -r args
-# Nmap scanning
-echo "\e[1;33mPerforming scanning on these ports with arguments $args :\e[0m "
-nmap -p"$specified_ports" "$args" "$target_ip" -oX  $resdir/"$target_ip"/scan.xml -o $resdir/"$target_ip"/scan.txt
+
+# Scan ports using nmap
+echo "Performing scanning on these ports with arguments $args:"
+nmap -p"$specified_ports" "$args" "$target_ip" -oX "$resdir/$target_ip/scan.xml" -o "$resdir/$target_ip/scan.txt"
 
 # Convert xml scan results to csv
-printf "\n\e[1;33mConverting to .csv...\e[0m\n"
-nmap_xml_parser.py -f $resdir/$target_ip/scan.xml -csv $resdir/$target_ip/scan.csv | grep '^\['
+echo "Converting to .csv..."
+nmap_xml_parser.py -f "$resdir/$target_ip/scan.xml" -csv "$resdir/$target_ip/scan.csv" | grep '^\['
 
 # Output
-printf "\e[32m\nDone! Check $resdir folder\e[0m\n"
-printf "Ports are availiable at:\e[1;34m\nTXT:\e[0m\e[34m\t%s/ports.txt\e[0m\n" "$resdir/$target_ip"
-printf "Scan results are availiable at:\n"
-printf "\e[1;34mXML:\e[0m\e[34m\t%s/scan.xmll\e[0m\n" "$resdir/$target_ip"
-printf "\e[1;34mCSV:\e[0m\e[34m\t%s/scan.csv\e[0m\n" "$resdir/$target_ip"
-printf "\e[1;34mTXT:\e[0m\e[34m\t%s/scan.txt\e[0m\n" "$resdir/$target_ip"
+echo "Done! Check $resdir folder"
+echo "Ports are available at: TXT: $resdir/$target_ip/ports.txt"
